@@ -662,7 +662,7 @@ class IndexingRunner:
                     threads.append(document_format_thread)
                     document_format_thread.start()
                 for thread in threads:
-                    thread.join()
+                    thread.join(timeout=30)
             return all_qa_documents
         return all_documents
 

@@ -1,3 +1,4 @@
+import logging
 from typing import List, Optional
 
 from core.model_manager import ModelInstance
@@ -39,7 +40,7 @@ class RerankRunner:
         )
 
         rerank_documents = []
-
+        logging.warning("Rerank finished!")
         for result in rerank_result.docs:
             # format document
             rerank_document = Document(

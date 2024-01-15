@@ -140,7 +140,7 @@ class DatasetRetrieverTool(BaseTool):
                     full_text_index_thread.start()
 
                 for thread in threads:
-                    thread.join()
+                    thread.join(timeout=30)
 
                 # hybrid search: rerank after all documents have been searched
                 if retrieval_model['search_method'] == 'hybrid_search':

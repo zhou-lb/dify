@@ -1,4 +1,5 @@
 import json
+import logging
 import threading
 from typing import List, Optional, Type
 
@@ -70,7 +71,7 @@ class DatasetMultiRetrieverTool(BaseTool):
             threads.append(retrieval_thread)
             retrieval_thread.start()
         for thread in threads:
-            thread.join()
+            thread.join(timeout=30)
         # do rerank for searched documents
         model_manager = ModelManager()
         rerank_model_instance = model_manager.get_model_instance(
@@ -243,6 +244,6 @@ class DatasetMultiRetrieverTool(BaseTool):
                         full_text_index_thread.start()
 
                     for thread in threads:
-                        thread.join()
-
+                        thread.join(timeout=30)
                     all_documents.extend(documents)
+                    logging.warning("DatasetMultiRetrieverTool finished!")

@@ -481,7 +481,7 @@ def normalization_collections():
                 threads.append(document_format_thread)
                 document_format_thread.start()
             for thread in threads:
-                thread.join()
+                thread.join(timeout=30)
 
     click.echo(click.style('Congratulations! restore {} dataset indexes.'.format(len(normalization_count)), fg='green'))
 

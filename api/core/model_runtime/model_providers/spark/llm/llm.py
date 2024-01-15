@@ -134,7 +134,7 @@ class SparkLargeLanguageModel(LargeLanguageModel):
 
             completion += delta
 
-        thread.join()
+        thread.join(timeout=30)
         # transform assistant message to prompt message
         assistant_prompt_message = AssistantPromptMessage(
             content=completion
@@ -194,7 +194,7 @@ class SparkLargeLanguageModel(LargeLanguageModel):
                 )
             )
 
-        thread.join()
+        thread.join(timeout=30)
 
     def _to_credential_kwargs(self, credentials: dict) -> dict:
         """
