@@ -1,0 +1,55 @@
+name: Sync How-To Markdown Files to Documentation Repo
+
+on:
+  push:
+    branches:
+      - chore/test-howto-sync
+    paths:
+      - '**/howto-*.md'
+
+jobs:
+  sync-markdown-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Sparse Checkout and Sync Files
+        env:
+          TARGET_REPO: 'https://github.com/langgenius/dify-docs.git'
+          TARGET_BRANCH: 'test-howto-sync'
+          ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN_GU }}
+        run: |
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR origin/${{ github.event.pull_request.base.ref }} ${{ github.event.pull_request.head.ref }} | grep 'howto-.*\.md' || true)
+
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "No new how-to file changes to sync"
+            exit 0
+          fi
+
+          # sparse checkout dify-docs repo
+          git clone --depth 1 --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
+          cd dify-docs-sparse
+          git sparse-checkout set en/tutorials/* zh_CN/tutorials/*
+
+          # Sync files to different language directories
+          for file in $CHANGED_FILES; do
+            if [[ $file == *"_CN.md" ]]; then
+              TARGET_DIR="zh_CN/tutorials"
+            else
+              TARGET_DIR="en/tutorials"
+            fi
+
+            if [ -f "../$file" ]; then
+              cp "../$file" "$TARGET_DIR/"
+            else
+              git rm "$TARGET_DIR/$(basename $file)" || true
+            fi
+          done
+
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Sync how-to markdown files from PR #${{ github.event.pull_request.number }} on main repo"
+          git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}
