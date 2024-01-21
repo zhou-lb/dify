@@ -21,7 +21,7 @@ jobs:
           TARGET_BRANCH: 'test-howto-sync'
           ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN_GU }}
         run: |
-          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${{ github.event.before }} | grep -e 'howto-.*\.md$' || true)
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${{ github.event.before }}..${{ github.event.after }} | grep -e 'howto-.*\.md$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new how-to file changes to sync"
@@ -29,21 +29,30 @@ jobs:
           fi
 
           # sparse checkout dify-docs repo
-          git clone --depth 1 --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
+          git clone --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
+          
+          git checkout -b $TARGET_BRANCH
+          echo "checked out target branch"
+          
           cd dify-docs-sparse
           git sparse-checkout set en/tutorials/ zh_CN/tutorials/
+          echo "set sparse checked out directories of dify-docs repo"
 
           # Sync files to different language directories
           for file in $CHANGED_FILES; do
+            echo "Processing file: $file"
             if [[ $file == *"_CN.md" ]]; then
               TARGET_DIR="zh_CN/tutorials"
             else
               TARGET_DIR="en/tutorials"
             fi
+            echo "Target directory: $TARGET_DIR"
 
             if [ -f "../$file" ]; then
+              echo "Copying file to target directory"
               cp "../$file" "$TARGET_DIR/"
             else
+              echo "File not found, removing from target directory"
               git rm "$TARGET_DIR/$(basename $file)" || true
             fi
           done
