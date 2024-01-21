@@ -31,7 +31,7 @@ jobs:
           # sparse checkout dify-docs repo
           git clone --depth 1 --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
           cd dify-docs-sparse
-          git sparse-checkout set en/tutorials/* zh_CN/tutorials/*
+          git sparse-checkout set en/tutorials/ zh_CN/tutorials/
 
           # Sync files to different language directories
           for file in $CHANGED_FILES; do
