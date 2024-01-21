@@ -19,10 +19,9 @@ jobs:
         env:
           TARGET_REPO: 'https://github.com/langgenius/dify-docs.git'
           TARGET_BRANCH: 'test-howto-sync'
-          SOURCE_REPO_MAIN: 'main'
           ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN_GU }}
         run: |
-          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${SOURCE_REPO_MAIN} | grep -e 'howto-.*\.md$' || true)
+          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${{ github.ref }} | grep -e 'howto-.*\.md$' || true)
 
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new how-to file changes to sync"
