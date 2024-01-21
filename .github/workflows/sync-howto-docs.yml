@@ -19,10 +19,13 @@ jobs:
         env:
           TARGET_REPO: 'https://github.com/langgenius/dify-docs.git'
           TARGET_BRANCH: 'test-howto-sync'
-          ACCESS_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN_GU }}
+          ACCESS_TOKEN: ${{ secrets.DIFY_DOCS_ACCESS_TOKEN }}
         run: |
           CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${{ github.event.before }}..${{ github.event.after }} | grep -e 'howto-.*\.md$' || true)
 
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+          
           if [ -z "$CHANGED_FILES" ]; then
             echo "No new how-to file changes to sync"
             exit 0
@@ -31,10 +34,11 @@ jobs:
           # sparse checkout dify-docs repo
           git clone --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
           
-          git checkout -b $TARGET_BRANCH
-          echo "checked out target branch"
-          
           cd dify-docs-sparse
+          git checkout $TARGET_BRANCH
+          echo "checked out target branch" 
+          echo "Current branch: $TARGET_BRANCH"
+          
           git sparse-checkout set en/tutorials/ zh_CN/tutorials/
           echo "set sparse checked out directories of dify-docs repo"
 
@@ -61,4 +65,13 @@ jobs:
           git config user.email github-actions@github.com
           git add .
           git commit -m "Sync how-to markdown files from PR #${{ github.event.pull_request.number }} on main repo"
-          git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}
+          
+          echo "Pushing files to $TARGET_BRANCH branch of $TARGET_REPO"
+
+          if git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}; then
+            echo "Files have been successfully pushed to $TARGET_BRANCH branch of $TARGET_REPO"
+          else
+            echo "Failed to push files to $TARGET_BRANCH branch of $TARGET_REPO"
+            exit 1
+          fi
+          
