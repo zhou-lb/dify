@@ -3,7 +3,8 @@ name: Sync How-To Markdown Files to Documentation Repo
 on:
   push:
     branches:
-      - chore/test-howto-sync
+      - 'main'
+      - 'test-howto-sync'
     paths:
       - '**/howto-*.md'
 
@@ -15,10 +16,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Sparse Checkout and Sync Files
+      - name: Sparse checkout and sync files
         env:
           TARGET_REPO: 'https://github.com/langgenius/dify-docs.git'
           TARGET_BRANCH: 'test-howto-sync'
+          TARGET_SECTION_EN: 'en/tutorials/'
+          TARGET_SECTION_ZH: 'zh_CN/tutorials/'
           ACCESS_TOKEN: ${{ secrets.DIFY_DOCS_ACCESS_TOKEN }}
         run: |
           CHANGED_HOWTOS=$(git diff --no-renames --name-only --diff-filter=AMDR ${{ github.event.before }}..${{ github.event.after }} | grep -e 'howto-.*\.md$' || true)
@@ -31,32 +34,33 @@ jobs:
             exit 0
           fi
 
-          # sparse checkout dify-docs repo
+          # sparse-checkout dify-docs repo
           git clone --filter=blob:none --sparse $TARGET_REPO dify-docs-sparse
           
           cd dify-docs-sparse
           git checkout $TARGET_BRANCH
           echo "checked out target branch: $TARGET_BRANCH"
           
-          git sparse-checkout set en/tutorials/ zh_CN/tutorials/
+          # set sparse checked out directories
+          git sparse-checkout set $TARGET_SECTION_EN $TARGET_SECTION_ZH
           echo "set sparse checked out directories of dify-docs repo"
 
           # Sync files to different language directories
           for file in $CHANGED_HOWTOS; do
             echo "Processing file: $file"
             if [[ $file == *"_CN.md" ]]; then
-              TARGET_DIR="zh_CN/tutorials"
+              TARGET_DIR=$TARGET_SECTION_ZH
             else
-              TARGET_DIR="en/tutorials"
+              TARGET_DIR=$TARGET_SECTION_EN
             fi
             echo "Target directory: $TARGET_DIR"
 
             if [ -f "../$file" ]; then
               echo "Copying file to target directory"
-              cp "../$file" "$TARGET_DIR/"
+              cp "../$file" "$TARGET_DIR"
             else
               echo "File not found, removing from target directory"
-              git rm "$TARGET_DIR/$(basename $file)" || true
+              git rm "$TARGET_DIR$(basename $file)" || true
             fi
           done
 
@@ -77,7 +81,7 @@ jobs:
             if git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}; then
               echo "Files have been successfully pushed to $TARGET_BRANCH branch of $TARGET_REPO"
             else
-              echo "Failed to push files to $TARGET_BRANCH branch of $TARGET_REPO"
+              echo "Failed to push files to $TARGET_BRANCH branch of $TARGET_REPO, please manually sync docs"
               exit 1
             fi
           fi
