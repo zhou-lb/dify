@@ -21,12 +21,12 @@ jobs:
           TARGET_BRANCH: 'test-howto-sync'
           ACCESS_TOKEN: ${{ secrets.DIFY_DOCS_ACCESS_TOKEN }}
         run: |
-          CHANGED_FILES=$(git diff --name-only --diff-filter=AMDR ${{ github.event.before }}..${{ github.event.after }} | grep -e 'howto-.*\.md$' || true)
+          CHANGED_HOWTOS=$(git diff --no-renames --name-only --diff-filter=AMDR ${{ github.event.before }}..${{ github.event.after }} | grep -e 'howto-.*\.md$' || true)
 
-          echo "Changed files:"
-          echo "$CHANGED_FILES"
+          echo "Changed how-to files:"
+          echo "$CHANGED_HOWTOS"
           
-          if [ -z "$CHANGED_FILES" ]; then
+          if [ -z "$CHANGED_HOWTOS" ]; then
             echo "No new how-to file changes to sync"
             exit 0
           fi
@@ -36,14 +36,13 @@ jobs:
           
           cd dify-docs-sparse
           git checkout $TARGET_BRANCH
-          echo "checked out target branch" 
-          echo "Current branch: $TARGET_BRANCH"
+          echo "checked out target branch: $TARGET_BRANCH"
           
           git sparse-checkout set en/tutorials/ zh_CN/tutorials/
           echo "set sparse checked out directories of dify-docs repo"
 
           # Sync files to different language directories
-          for file in $CHANGED_FILES; do
+          for file in $CHANGED_HOWTOS; do
             echo "Processing file: $file"
             if [[ $file == *"_CN.md" ]]; then
               TARGET_DIR="zh_CN/tutorials"
@@ -63,15 +62,22 @@ jobs:
 
           git config user.name github-actions
           git config user.email github-actions@github.com
-          git add .
-          git commit -m "Sync how-to markdown files from PR #${{ github.event.pull_request.number }} on main repo"
+          git add --all
           
-          echo "Pushing files to $TARGET_BRANCH branch of $TARGET_REPO"
+          GIT_STATUS=$(git status --porcelain)
+          echo "staged changes: $GIT_STATUS"
 
-          if git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}; then
-            echo "Files have been successfully pushed to $TARGET_BRANCH branch of $TARGET_REPO"
+          if [ -z "$GIT_STATUS" ]; then
+            echo "Nothing to commit, skipping push"
           else
-            echo "Failed to push files to $TARGET_BRANCH branch of $TARGET_REPO"
-            exit 1
+            git commit -m "Sync how-to markdown files from PR #${{ github.event.pull_request.number }} on main repo"
+            
+            echo "Pushing files to $TARGET_BRANCH branch of $TARGET_REPO"
+            if git push https://${ACCESS_TOKEN}@${TARGET_REPO#https://} HEAD:${TARGET_BRANCH}; then
+              echo "Files have been successfully pushed to $TARGET_BRANCH branch of $TARGET_REPO"
+            else
+              echo "Failed to push files to $TARGET_BRANCH branch of $TARGET_REPO"
+              exit 1
+            fi
           fi
           
