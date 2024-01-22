@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - 'main'
-      - 'test-howto-sync'
+      - 'chore/test-howto-sync'
     paths:
       - '**/howto-*.md'
 
