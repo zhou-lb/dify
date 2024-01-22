@@ -60,8 +60,6 @@ jobs:
             fi
           done
 
-          git config user.name github-actions
-          git config user.email github-actions@github.com
           git add --all
           
           GIT_STATUS=$(git status --porcelain)
@@ -70,6 +68,9 @@ jobs:
           if [ -z "$GIT_STATUS" ]; then
             echo "Nothing to commit, skipping push"
           else
+            git config user.name github-actions
+            git config user.email github-actions@github.com
+
             git commit -m "Sync how-to markdown files from PR #${{ github.event.pull_request.number }} on main repo"
             
             echo "Pushing files to $TARGET_BRANCH branch of $TARGET_REPO"
