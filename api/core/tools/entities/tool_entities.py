@@ -11,6 +11,7 @@ class ToolProviderType(Enum):
     BUILT_IN = "built-in"
     APP_BASED = "app-based"
     API_BASED = "api-based"
+    MODEL = "model"
 
     @classmethod
     def value_of(cls, value: str) -> 'ToolProviderType':

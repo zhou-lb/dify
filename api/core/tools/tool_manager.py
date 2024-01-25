@@ -271,6 +271,15 @@ class ToolManager:
         return builtin_providers
     
     @staticmethod
+    def list_model_providers() -> List[ToolProviderController]:
+        """
+            list all the model providers
+
+            :return: the list of the model providers
+        """
+        
+    
+    @staticmethod
     def get_tool_label(tool_name: str) -> Union[I18nObject, None]:
         """
             get the tool label
