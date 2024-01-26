@@ -1,4 +1,5 @@
 from core.tools.entities.user_entities import UserToolProvider
+from core.tools.entities.tool_entities import ToolProviderType
 from typing import List
 from yaml import load, FullLoader
 
@@ -19,6 +20,8 @@ class BuiltinToolProviderSort:
             position = tmp_position
 
         def sort_compare(provider: UserToolProvider) -> int:
+            if provider.type == UserToolProvider.ProviderType.MODEL:
+                return position.get(f'model_provider.{provider.name}', 10000)
             return position.get(provider.name, 10000)
         
         sorted_providers = sorted(providers, key=sort_compare)

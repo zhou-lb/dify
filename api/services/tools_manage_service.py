@@ -15,6 +15,8 @@ from core.tools.utils.encoder import serialize_base_model_array, serialize_base_
 from core.tools.utils.configration import ToolConfiguration
 from core.tools.errors import ToolProviderCredentialValidationError, ToolProviderNotFoundError, ToolNotFoundError
 
+from services.model_provider_service import ModelProviderService
+
 from extensions.ext_database import db
 from models.tools import BuiltinToolProvider, ApiToolProvider
 
@@ -48,11 +50,13 @@ class ToolManageService:
             :param provider: the provider dict
         """
         url_prefix = (current_app.config.get("CONSOLE_API_URL")
-                      + f"/console/api/workspaces/current/tool-provider/builtin/")
+                      + f"/console/api/workspaces/current/tool-provider/")
         
         if 'icon' in provider:
             if provider['type'] == UserToolProvider.ProviderType.BUILTIN.value:
-                provider['icon'] = url_prefix + provider['name'] + '/icon'
+                provider['icon'] = url_prefix + 'builtin/' + provider['name'] + '/icon'
+            elif provider['type'] == UserToolProvider.ProviderType.MODEL.value:
+                provider['icon'] = url_prefix + 'model/' + provider['name'] + '/icon'
             elif provider['type'] == UserToolProvider.ProviderType.API.value:
                 try:
                     provider['icon'] = json.loads(provider['icon'])
@@ -433,6 +437,22 @@ class ToolManageService:
         icon_path, mime_type = ToolManager.get_builtin_provider_icon(provider)
         with open(icon_path, 'rb') as f:
             icon_bytes = f.read()
+
+        return icon_bytes, mime_type
+    
+    @staticmethod
+    def get_model_tool_provider_icon(
+        provider: str
+    ):
+        """
+            get tool provider icon and it's minetype
+        """
+        
+        service = ModelProviderService()
+        icon_bytes, mime_type = service.get_model_provider_icon(provider=provider, icon_type='icon_small', lang='en_US')
+
+        if icon_bytes is None:
+            raise ValueError(f'provider {provider} does not exists')
 
         return icon_bytes, mime_type
     

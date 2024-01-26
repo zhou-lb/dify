@@ -84,6 +84,11 @@ class ToolBuiltinProviderIconApi(Resource):
         icon_bytes, minetype = ToolManageService.get_builtin_tool_provider_icon(provider)
         return send_file(io.BytesIO(icon_bytes), mimetype=minetype)
 
+class ToolModelProviderIconApi(Resource):
+    @setup_required
+    def get(self, provider):
+        icon_bytes, minetype = ToolManageService.get_model_tool_provider_icon(provider)
+        return send_file(io.BytesIO(icon_bytes), mimetype=minetype)
 
 class ToolApiProviderAddApi(Resource):
     @setup_required
@@ -283,6 +288,7 @@ api.add_resource(ToolBuiltinProviderDeleteApi, '/workspaces/current/tool-provide
 api.add_resource(ToolBuiltinProviderUpdateApi, '/workspaces/current/tool-provider/builtin/<provider>/update')
 api.add_resource(ToolBuiltinProviderCredentialsSchemaApi, '/workspaces/current/tool-provider/builtin/<provider>/credentials_schema')
 api.add_resource(ToolBuiltinProviderIconApi, '/workspaces/current/tool-provider/builtin/<provider>/icon')
+api.add_resource(ToolModelProviderIconApi, '/workspaces/current/tool-provider/model/<provider>/icon')
 api.add_resource(ToolApiProviderAddApi, '/workspaces/current/tool-provider/api/add')
 api.add_resource(ToolApiProviderGetRemoteSchemaApi, '/workspaces/current/tool-provider/api/remote')
 api.add_resource(ToolApiProviderListToolsApi, '/workspaces/current/tool-provider/api/tools')
