@@ -4,6 +4,7 @@
 - webscraper
 - wolframalpha
 - model_provider.openai
+- model_provider.google
 - chart
 - time
 - yahoo

@@ -1,5 +1,7 @@
-from abc import abstractmethod
 from typing import List, Dict, Any
+from pydantic import BaseModel
+from os import path
+from yaml import load, FullLoader
 
 from core.tools.entities.tool_entities import ToolProviderType, \
       ToolParamter, ToolProviderCredentials, ToolDescription, ToolProviderIdentity
@@ -12,6 +14,25 @@ from core.tools.entities.common_entities import I18nObject
 from core.model_runtime.entities.model_entities import ModelType, ModelFeature
 from core.entities.model_entities import ModelStatus
 from core.provider_manager import ProviderManager, ProviderConfiguration
+
+class ModelToolProviderConifguration(BaseModel):
+    """
+        the configuration of the model tool provider
+    """
+    class Provider(BaseModel):
+        class Model(BaseModel):
+            name: str
+            alias: I18nObject = None
+
+        provider: str
+        alias: I18nObject = None
+        models: List[Model] = None
+
+    providers: List[Provider] = None
+
+_model_tool_provider_config: ModelToolProviderConifguration = None
+with open(path.join(path.dirname(__file__), '_model_providers.yaml'), 'r') as f:
+    _model_tool_provider_config = ModelToolProviderConifguration(**load(f, Loader=FullLoader))
 
 class ModelToolProviderController(ToolProviderController):
     configuration: ProviderConfiguration = None
@@ -43,14 +64,21 @@ class ModelToolProviderController(ToolProviderController):
                 is_active = False
                 break
 
+        # override the configuration
+        for provider in _model_tool_provider_config.providers:
+            if provider.provider == configuration.provider.provider:
+                configuration.provider.label.en_US = provider.alias.en_US
+                configuration.provider.label.zh_Hans = provider.alias.zh_Hans
+                break
+
         return ModelToolProviderController(
             is_active=is_active,
             identity=ToolProviderIdentity(
                 author='Dify',
                 name=configuration.provider.provider,
                 description=I18nObject(
-                    zh_Hans=f'{configuration.provider.label.zh_Hans}多模态模型工具', 
-                    en_US=f'{configuration.provider.label.en_US} multimodal model tool'
+                    zh_Hans=f'{configuration.provider.label.zh_Hans} 模型能力提供商', 
+                    en_US=f'{configuration.provider.label.en_US} model capability provider'
                 ),
                 label=I18nObject(
                     zh_Hans=configuration.provider.label.zh_Hans,
@@ -91,8 +119,20 @@ class ModelToolProviderController(ToolProviderController):
             return tools
         configuration = self.configuration
 
+        provider_configuration = next(filter(
+            lambda x: x.provider == self.configuration.provider.provider, _model_tool_provider_config.providers
+        ), None)
+        
         for model in configuration.get_provider_models():
             if model.model_type == ModelType.LLM and ModelFeature.VISION in (model.features or []):
+                # override the configuration
+                if provider_configuration is not None:
+                    for model_config in provider_configuration.models or []:
+                        if model_config.name == model.model:
+                            model.label.en_US = model_config.alias.en_US
+                            model.label.zh_Hans = model_config.alias.zh_Hans
+                            break
+                    
                 tools.append(ModelTool(
                     identity=ToolIdentity(
                         author='Dify',

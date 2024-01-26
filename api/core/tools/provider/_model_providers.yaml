@@ -1,0 +1,28 @@
+providers:
+  - provider: google
+    alias:
+      en_US: GeminiVision
+      zh_Hans: Gemini 图像理解
+    models:
+      - name: gemini-pro-vision
+        alias:
+          en_US: Gemini Pro Vision
+          zh_Hans: Gemini Pro 图像理解
+  - provider: zhipuai
+    alias:
+      en_US: ZhipuaiModel
+      zh_Hans: 智谱AI模型能力
+    models:
+      - name: glm-4v
+        alias:
+          en_US: GLM-4V
+          zh_Hans: GLM-4V 图像理解
+  - provider: openai
+    alias:
+      en_US: OpenAIModel
+      zh_Hans: OpenAI模型能力
+    models:
+      - name: gpt-4-vision-preview
+        alias:
+          en_US: GPT-4 Vision Preview
+          zh_Hans: GPT-4 图像理解
