@@ -12,7 +12,6 @@ class ModelTool(Tool):
         """
         VISION = 'vision'
 
-    model_instance: ModelInstance
     tool_type: ModelToolType
     """
     Api tool

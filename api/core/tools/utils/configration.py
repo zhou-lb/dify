@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from core.tools.entities.tool_entities import ToolProviderCredentials
 from core.tools.provider.tool_provider import ToolProviderController
 from core.helper import encrypter
+from core.helper.tool_provider_cache import ToolProviderCredentialsCacheType, ToolProviderCredentialsCache
 
 class ToolConfiguration(BaseModel):
     tenant_id: str
@@ -62,8 +63,15 @@ class ToolConfiguration(BaseModel):
 
         return a deep copy of credentials with decrypted values
         """
+        cache = ToolProviderCredentialsCache(
+            tenant_id=self.tenant_id, 
+            identity_id=f'{self.provider_controller.app_type.value}.{self.provider_controller.identity.name}',
+            cache_type=ToolProviderCredentialsCacheType.PROVIDER
+        )
+        cached_credentials = cache.get()
+        if cached_credentials:
+            return cached_credentials
         credentials = self._deep_copy(credentials)
-
         # get fields need to be decrypted
         fields = self.provider_controller.get_credentials_schema()
         for field_name, field in fields.items():
@@ -73,5 +81,6 @@ class ToolConfiguration(BaseModel):
                         credentials[field_name] = encrypter.decrypt_token(self.tenant_id, credentials[field_name])
                     except:
                         pass
-        
+
+        cache.set(credentials)
         return credentials

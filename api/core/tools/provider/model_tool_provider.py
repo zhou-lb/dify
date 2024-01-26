@@ -1,46 +1,95 @@
 from abc import abstractmethod
-from typing import List, Dict, Any, Iterable
+from typing import List, Dict, Any
 
 from core.tools.entities.tool_entities import ToolProviderType, \
-      ToolParamter, ToolProviderCredentials, ToolDescription
+      ToolParamter, ToolProviderCredentials, ToolDescription, ToolProviderIdentity
 from core.tools.provider.tool_provider import ToolProviderController
 from core.tools.errors import ToolNotFoundError
 from core.tools.tool.model_tool import ModelTool
 from core.tools.tool.tool import Tool
 from core.tools.entities.tool_entities import ToolIdentity
 from core.tools.entities.common_entities import I18nObject
-from core.model_runtime.model_providers import model_provider_factory
 from core.model_runtime.entities.model_entities import ModelType, ModelFeature
-from core.model_runtime.model_providers.__base.large_language_model import LargeLanguageModel
 from core.entities.model_entities import ModelStatus
 from core.provider_manager import ProviderManager, ProviderConfiguration
 
 class ModelToolProviderController(ToolProviderController):
-    def __init__(self, **data: Any) -> None:
+    configuration: ProviderConfiguration = None
+    is_active: bool = False
+
+    def __init__(self, configuration: ProviderConfiguration = None, **kwargs):
         """
             init the provider
 
             :param data: the data of the provider
         """
+        super().__init__(**kwargs)
+        self.configuration = configuration
 
-    def _get_model_tools(self, tenant_id: str = None, configurations: Iterable[ProviderConfiguration] = None) -> List[ModelTool]:
+    @staticmethod
+    def from_db(configuration: ProviderConfiguration = None) -> 'ModelToolProviderController':
+        """
+            init the provider from db
+
+            :param configuration: the configuration of the provider
+        """
+        # check if all models are active
+        if configuration is None:
+            return None
+        is_active = True
+        models = configuration.get_provider_models()
+        for model in models:
+            if model.status != ModelStatus.ACTIVE:
+                is_active = False
+                break
+
+        return ModelToolProviderController(
+            is_active=is_active,
+            identity=ToolProviderIdentity(
+                author='Dify',
+                name=configuration.provider.provider,
+                description=I18nObject(
+                    zh_Hans=f'{configuration.provider.label.zh_Hans}多模态模型工具', 
+                    en_US=f'{configuration.provider.label.en_US} multimodal model tool'
+                ),
+                label=I18nObject(
+                    zh_Hans=configuration.provider.label.zh_Hans,
+                    en_US=configuration.provider.label.en_US
+                ),
+                icon=configuration.provider.icon_small.en_US,
+            ),
+            configuration=configuration,
+            credentials_schema={},
+        )
+    
+    @staticmethod
+    def is_configuration_valid(configuration: ProviderConfiguration) -> bool:
+        """
+            check if the configuration has a model can be used as a tool
+        """
+        models = configuration.get_provider_models()
+        for model in models:
+            if model.model_type == ModelType.LLM and ModelFeature.VISION in (model.features or []):
+                return True
+        return False
+
+    def _get_model_tools(self, tenant_id: str = None) -> List[ModelTool]:
         """
             returns a list of tools that the provider can provide
 
             :return: list of tools
         """
         tenant_id = tenant_id or 'ffffffff-ffff-ffff-ffff-ffffffffffff'
-
-        # get all providers
         provider_manager = ProviderManager()
-        if configurations is None:
+        if self.configuration is None:
             configurations = provider_manager.get_configurations(tenant_id=tenant_id).values()
+            self.configuration = next(filter(lambda x: x.provider == self.identity.name, configurations), None)
         # get all tools
         tools: List[ModelTool] = []
         # get all models
-        configuration = next(filter(lambda x: x.provider == self.identity.name, configurations), None)
-        if configuration is None:
+        if not self.configuration:
             return tools
+        configuration = self.configuration
 
         for model in configuration.get_provider_models():
             if model.model_type == ModelType.LLM and ModelFeature.VISION in (model.features or []):
@@ -68,6 +117,9 @@ class ModelToolProviderController(ToolProviderController):
                     is_team_authorization=model.status == ModelStatus.ACTIVE,
                     tool_type=ModelTool.ModelToolType.VISION,
                 ))
+
+        self.tools = tools
+        return tools
     
     def get_credentials_schema(self) -> Dict[str, ToolProviderCredentials]:
         """
@@ -83,7 +135,7 @@ class ModelToolProviderController(ToolProviderController):
 
             :return: list of tools
         """
-        return self._get_model_tools()
+        return self._get_model_tools(tenant_id=tanent_id)
     
     def get_tool(self, tool_name: str) -> ModelTool:
         """
@@ -131,7 +183,6 @@ class ModelToolProviderController(ToolProviderController):
         """
         pass
 
-    @abstractmethod
     def _validate_credentials(self, credentials: Dict[str, Any]) -> None:
         """
             validate the credentials of the provider

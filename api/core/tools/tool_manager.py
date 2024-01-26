@@ -3,6 +3,7 @@ from os import listdir, path
 
 from core.tools.entities.tool_entities import ToolInvokeMessage, ApiProviderAuthType, ToolProviderCredentials
 from core.tools.provider.tool_provider import ToolProviderController
+from core.tools.provider.model_tool_provider import ModelToolProviderController
 from core.tools.tool.builtin_tool import BuiltinTool
 from core.tools.tool.api_tool import ApiTool
 from core.tools.provider.builtin_tool_provider import BuiltinToolProviderController
@@ -15,6 +16,7 @@ from core.tools.entities.user_entities import UserToolProvider
 from core.tools.utils.configration import ToolConfiguration
 from core.tools.utils.encoder import serialize_base_model_dict
 from core.tools.provider.builtin._positions import BuiltinToolProviderSort
+from core.provider_manager import ProviderManager
 
 from core.model_runtime.entities.message_entities import PromptMessage
 from core.callback_handler.agent_tool_callback_handler import DifyAgentCallbackHandler
@@ -271,13 +273,24 @@ class ToolManager:
         return builtin_providers
     
     @staticmethod
-    def list_model_providers() -> List[ToolProviderController]:
+    def list_model_providers(tenant_id: str = None) -> List[ModelToolProviderController]:
         """
             list all the model providers
 
             :return: the list of the model providers
         """
-        
+        tenant_id = tenant_id or 'ffffffff-ffff-ffff-ffff-ffffffffffff'
+        # get configurations
+        provider_manager = ProviderManager()
+        configurations = provider_manager.get_configurations(tenant_id).values()
+        # get model providers
+        model_providers: List[ModelToolProviderController] = []
+        for configuration in configurations:
+            if not ModelToolProviderController.is_configuration_valid(configuration):
+                continue
+            model_providers.append(ModelToolProviderController.from_db(configuration))
+
+        return model_providers
     
     @staticmethod
     def get_tool_label(tool_name: str) -> Union[I18nObject, None]:
@@ -357,6 +370,28 @@ class ToolManager:
             masked_credentials = tool_configuration.mask_tool_credentials(credentials=decrypted_credentials)
 
             result_providers[provider_name].team_credentials = masked_credentials
+
+        # get model tool providers
+        model_providers = ToolManager.list_model_providers(tenant_id=tenant_id)
+        # append model providers
+        for provider in model_providers:
+            result_providers[f'model_provider.{provider.identity.name}'] = UserToolProvider(
+                id=provider.identity.name,
+                author=provider.identity.author,
+                name=provider.identity.name,
+                description=I18nObject(
+                    en_US=provider.identity.description.en_US,
+                    zh_Hans=provider.identity.description.zh_Hans,
+                ),
+                icon=provider.identity.icon,
+                label=I18nObject(
+                    en_US=provider.identity.label.en_US,
+                    zh_Hans=provider.identity.label.zh_Hans,
+                ),
+                type=UserToolProvider.ProviderType.MODEL,
+                team_credentials={},
+                is_team_authorization=provider.is_active,
+            )
 
         # get db api providers
         db_api_providers: List[ApiToolProvider] = db.session.query(ApiToolProvider). \
