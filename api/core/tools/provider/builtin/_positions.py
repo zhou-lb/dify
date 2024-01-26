@@ -1,23 +1,23 @@
 from core.tools.entities.user_entities import UserToolProvider
 from typing import List
+from yaml import load, FullLoader
 
-position = {
-    'google': 1,
-    'wikipedia': 2,
-    'dalle': 3,
-    'webscraper': 4,
-    'wolframalpha': 5,
-    'chart': 6,
-    'time': 7,
-    'yahoo': 8,
-    'stablediffusion': 9,
-    'vectorizer': 10,
-    'youtube': 11,
-}
+import os.path
+
+position = {}
 
 class BuiltinToolProviderSort:
     @staticmethod
     def sort(providers: List[UserToolProvider]) -> List[UserToolProvider]:
+        global position
+        if not position:
+            tmp_position = {}
+            file_path = os.path.join(os.path.dirname(__file__), '..', '_position.yaml')
+            with open(file_path, 'r') as f:
+                for pos, val in enumerate(load(f, Loader=FullLoader)):
+                    tmp_position[val] = pos
+            position = tmp_position
+
         def sort_compare(provider: UserToolProvider) -> int:
             return position.get(provider.name, 10000)
         
