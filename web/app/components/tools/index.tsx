@@ -117,7 +117,7 @@ const Tools: FC<Props> = ({
       catch (e) { }
       setIsDetailLoading(false)
     })()
-  }, [currCollection?.name])
+  }, [currCollection?.name, currCollection?.type])
 
   const [isShowEditCollectionToolModal, setIsShowEditCollectionToolModal] = useState(false)
   const handleCreateToolCollection = () => {

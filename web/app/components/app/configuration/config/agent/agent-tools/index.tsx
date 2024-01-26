@@ -152,7 +152,7 @@ const AgentTools: FC = () => {
                   )
                   : (
                     <div className='hidden group-hover:flex items-center'>
-                      {item.provider_type === CollectionType.builtIn && (
+                      {(item.provider_type === CollectionType.builtIn || item.provider_type === CollectionType.model) && (
                         <TooltipPlus
                           popupContent={t('tools.setBuiltInTools.infoAndSetting')}
                         >
