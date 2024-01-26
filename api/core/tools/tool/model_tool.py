@@ -3,9 +3,13 @@ from enum import Enum
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
 from core.tools.tool.tool import Tool
+from core.model_runtime.entities.model_entities import ModelType
 from core.model_manager import ModelInstance
 
 class ModelTool(Tool):
+    _model_instance: ModelInstance = None
+    _model: str = None
+
     class ModelToolType(Enum):
         """
             the type of the model tool
@@ -13,8 +17,9 @@ class ModelTool(Tool):
         VISION = 'vision'
 
     tool_type: ModelToolType
+
     """
-    Api tool
+    Model tool
     """
     def fork_tool_runtime(self, meta: Dict[str, Any]) -> 'Tool':
         """
@@ -38,6 +43,5 @@ class ModelTool(Tool):
 
     def _invoke(self, user_id: str, tool_paramters: Dict[str, Any]) -> ToolInvokeMessage | List[ToolInvokeMessage]:
         """
-        invoke http request
         """
         pass

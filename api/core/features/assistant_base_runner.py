@@ -128,7 +128,7 @@ class BaseAssistantApplicationRunner(AppRunner):
         """
         tool_entity = ToolManager.get_tool_runtime(
             provider_type=tool.provider_type, provider_name=tool.provider_id, tool_name=tool.tool_name, 
-            tanent_id=self.application_generate_entity.tenant_id,
+            tenant_id=self.application_generate_entity.tenant_id,
             agent_callback=self.agent_callback
         )
         tool_entity.load_variables(self.variables_pool)

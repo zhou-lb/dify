@@ -13,7 +13,8 @@ from core.tools.entities.tool_entities import ToolIdentity
 from core.tools.entities.common_entities import I18nObject
 from core.model_runtime.entities.model_entities import ModelType, ModelFeature
 from core.entities.model_entities import ModelStatus
-from core.provider_manager import ProviderManager, ProviderConfiguration
+from core.provider_manager import ProviderManager, ProviderConfiguration, ProviderModelBundle
+from core.model_manager import ModelInstance
 
 class ModelToolProviderConifguration(BaseModel):
     """
@@ -122,7 +123,7 @@ class ModelToolProviderController(ToolProviderController):
         provider_configuration = next(filter(
             lambda x: x.provider == self.configuration.provider.provider, _model_tool_provider_config.providers
         ), None)
-        
+
         for model in configuration.get_provider_models():
             if model.model_type == ModelType.LLM and ModelFeature.VISION in (model.features or []):
                 # override the configuration
@@ -132,7 +133,17 @@ class ModelToolProviderController(ToolProviderController):
                             model.label.en_US = model_config.alias.en_US
                             model.label.zh_Hans = model_config.alias.zh_Hans
                             break
-                    
+                
+                provider_instance = configuration.get_provider_instance()
+                model_type_instance = provider_instance.get_model_instance(model.model_type)
+                provider_model_bundle = ProviderModelBundle(
+                    configuration=configuration,
+                    provider_instance=provider_instance,
+                    model_type_instance=model_type_instance
+                )
+
+                model_instance = ModelInstance(provider_model_bundle, model.model)
+                
                 tools.append(ModelTool(
                     identity=ToolIdentity(
                         author='Dify',
@@ -156,6 +167,8 @@ class ModelToolProviderController(ToolProviderController):
                     ),
                     is_team_authorization=model.status == ModelStatus.ACTIVE,
                     tool_type=ModelTool.ModelToolType.VISION,
+                    _model_instance=model_instance,
+                    _model=model.model,
                 ))
 
         self.tools = tools

@@ -141,7 +141,7 @@ class ToolManager:
             raise ToolProviderNotFoundError(f'provider type {provider_type} not found')
         
     @staticmethod
-    def get_tool_runtime(provider_type: str, provider_name: str, tool_name: str, tanent_id, 
+    def get_tool_runtime(provider_type: str, provider_name: str, tool_name: str, tenant_id, 
                          agent_callback: DifyAgentCallbackHandler = None) \
         -> Union[BuiltinTool, ApiTool]:
         """
@@ -160,13 +160,13 @@ class ToolManager:
             provider_controller = ToolManager.get_builtin_provider(provider_name)
             if not provider_controller.need_credentials:
                 return builtin_tool.fork_tool_runtime(meta={
-                    'tenant_id': tanent_id,
+                    'tenant_id': tenant_id,
                     'credentials': {},
                 }, agent_callback=agent_callback)
 
             # get credentials
             builtin_provider: BuiltinToolProvider = db.session.query(BuiltinToolProvider).filter(
-                BuiltinToolProvider.tenant_id == tanent_id,
+                BuiltinToolProvider.tenant_id == tenant_id,
                 BuiltinToolProvider.provider == provider_name,
             ).first()
 
@@ -176,29 +176,42 @@ class ToolManager:
             # decrypt the credentials
             credentials = builtin_provider.credentials
             controller = ToolManager.get_builtin_provider(provider_name)
-            tool_configuration = ToolConfiguration(tenant_id=tanent_id, provider_controller=controller)
+            tool_configuration = ToolConfiguration(tenant_id=tenant_id, provider_controller=controller)
 
             decrypted_credentials = tool_configuration.decrypt_tool_credentials(credentials)
 
             return builtin_tool.fork_tool_runtime(meta={
-                'tenant_id': tanent_id,
+                'tenant_id': tenant_id,
                 'credentials': decrypted_credentials,
                 'runtime_parameters': {}
             }, agent_callback=agent_callback)
         
         elif provider_type == 'api':
-            if tanent_id is None:
+            if tenant_id is None:
                 raise ValueError('tanent id is required for api provider')
             
-            api_provider, credentials = ToolManager.get_api_provider_controller(tanent_id, provider_name)
+            api_provider, credentials = ToolManager.get_api_provider_controller(tenant_id, provider_name)
 
             # decrypt the credentials
-            tool_configuration = ToolConfiguration(tenant_id=tanent_id, provider_controller=api_provider)
+            tool_configuration = ToolConfiguration(tenant_id=tenant_id, provider_controller=api_provider)
             decrypted_credentials = tool_configuration.decrypt_tool_credentials(credentials)
 
             return api_provider.get_tool(tool_name).fork_tool_runtime(meta={
-                'tenant_id': tanent_id,
+                'tenant_id': tenant_id,
                 'credentials': decrypted_credentials,
+            })
+        elif provider_type == 'model':
+            if tenant_id is None:
+                raise ValueError('tanent id is required for model provider')
+            # get model provider
+            model_provider = ToolManager.get_model_provider(tenant_id, provider_name)
+
+            # get tool
+            model_tool = model_provider.get_tool(tool_name)
+
+            return model_tool.fork_tool_runtime(meta={
+                'tenant_id': tenant_id,
+                'credentials': model_tool._model_instance.credentials
             })
         elif provider_type == 'app':
             raise NotImplementedError('app provider not implemented')
