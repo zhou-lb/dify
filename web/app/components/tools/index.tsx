@@ -16,7 +16,7 @@ import EditCustomToolModal from './edit-custom-collection-modal'
 import NoCustomTool from './info/no-custom-tool'
 import NoSearchRes from './info/no-search-res'
 import TabSlider from '@/app/components/base/tab-slider'
-import { createCustomCollection, fetchCollectionList as doFetchCollectionList, fetchBuiltInToolList, fetchCustomToolList } from '@/service/tools'
+import { createCustomCollection, fetchCollectionList as doFetchCollectionList, fetchBuiltInToolList, fetchCustomToolList, fetchModelToolList } from '@/service/tools'
 import type { AgentTool } from '@/types/app'
 
 type Props = {
@@ -105,8 +105,12 @@ const Tools: FC<Props> = ({
           const list = await fetchBuiltInToolList(currCollection.name) as Tool[]
           setCurrentTools(list)
         }
-        else {
+        else if (currCollection.type === CollectionType.custom) {
           const list = await fetchCustomToolList(currCollection.name) as Tool[]
+          setCurrentTools(list)
+        }
+        else if (currCollection.type === CollectionType.model) {
+          const list = await fetchModelToolList(currCollection.name) as Tool[]
           setCurrentTools(list)
         }
       }
@@ -180,7 +184,7 @@ const Tools: FC<Props> = ({
               (showCollectionList.length > 0 || !query)
                 ? <ToolNavList
                   className='mt-2 grow height-0 overflow-y-auto'
-                  currentName={currCollection?.name || ''}
+                  currentIndex={currCollectionIndex || 0}
                   list={showCollectionList}
                   onChosen={setCurrCollectionIndex}
                 />

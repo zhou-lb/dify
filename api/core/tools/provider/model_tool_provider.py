@@ -129,13 +129,13 @@ class ModelToolProviderController(ToolProviderController):
         """
         return {}
 
-    def get_tools(self, user_id: str, tanent_id: str) -> List[ModelTool]:
+    def get_tools(self, user_id: str, tenant_id: str) -> List[ModelTool]:
         """
             returns a list of tools that the provider can provide
 
             :return: list of tools
         """
-        return self._get_model_tools(tenant_id=tanent_id)
+        return self._get_model_tools(tenant_id=tenant_id)
     
     def get_tool(self, tool_name: str) -> ModelTool:
         """

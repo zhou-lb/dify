@@ -19,6 +19,7 @@ export enum CollectionType {
   all = 'all',
   builtIn = 'builtin',
   custom = 'api',
+  model = 'model',
 }
 
 export type Emoji = {

@@ -42,7 +42,8 @@ const ToolList: FC<Props> = ({
   const { t } = useTranslation()
   const isInToolsPage = loc === LOC.tools
   const isBuiltIn = collection?.type === CollectionType.builtIn
-  const needAuth = collection?.allow_delete
+  const isModel = collection?.type === CollectionType.model
+  const needAuth = collection?.allow_delete || collection?.type === CollectionType.model
 
   const [showSettingAuth, setShowSettingAuth] = useState(false)
 
@@ -52,6 +53,7 @@ const ToolList: FC<Props> = ({
       return
     (async () => {
       if (collection.type === CollectionType.custom) {
+        console.log(collection)
         const res = await fetchCustomCollection(collection.name) as any
         setCustomCollection({
           ...res,
@@ -120,7 +122,7 @@ const ToolList: FC<Props> = ({
           <div className=''>{t('tools.includeToolNum', {
             num: list.length,
           })}</div>
-          {needAuth && isBuiltIn && !collection.is_team_authorization && (
+          {needAuth && (isBuiltIn || isModel) && !collection.is_team_authorization && (
             <>
               <div>·</div>
               <div
@@ -145,7 +147,7 @@ const ToolList: FC<Props> = ({
               collection={collection}
               isInToolsPage={isInToolsPage}
               isToolNumMax={(addedTools?.length || 0) >= MAX_TOOLS_NUM}
-              added={!!addedTools?.find(v => v.provider_id === collection.id && v.tool_name === item.name)}
+              added={!!addedTools?.find(v => v.provider_id === collection.id && v.provider_type === collection.type && v.tool_name === item.name)}
               onAdd={!isInToolsPage ? tool => onAddTool?.(collection as Collection, tool) : undefined}
             />
           ))}

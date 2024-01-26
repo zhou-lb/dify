@@ -309,6 +309,30 @@ class ToolManageService:
                 ) for tool_bundle in provider.tools
             ])
         )
+    
+    @staticmethod
+    def list_model_tool_provider_tools(
+        user_id: str, tenant_id: str, provider: str
+    ):
+        """
+            list model tool provider tools
+        """
+        provider_controller = ToolManager.get_model_provider(tenant_id=tenant_id, provider_name=provider)
+        tools = provider_controller.get_tools(user_id=user_id, tenant_id=tenant_id)
+
+        result = [
+            UserTool(
+                author=tool.identity.author,
+                name=tool.identity.name,
+                label=tool.identity.label,
+                description=tool.description.human,
+                parameters=tool.parameters or []
+            ) for tool in tools
+        ]
+
+        return json.loads(
+            serialize_base_model_array(result)
+        )
 
     @staticmethod
     def update_builtin_tool_provider(

@@ -293,6 +293,24 @@ class ToolManager:
         return model_providers
     
     @staticmethod
+    def get_model_provider(tenant_id: str, provider_name: str) -> ModelToolProviderController:
+        """
+            get the model provider
+
+            :param provider_name: the name of the provider
+
+            :return: the provider
+        """
+        # get configurations
+        provider_manager = ProviderManager()
+        configurations = provider_manager.get_configurations(tenant_id)
+        configuration = configurations.get(provider_name)
+        if configuration is None:
+            raise ToolProviderNotFoundError(f'model provider {provider_name} not found')
+        
+        return ModelToolProviderController.from_db(configuration)
+    
+    @staticmethod
     def get_tool_label(tool_name: str) -> Union[I18nObject, None]:
         """
             get the tool label
@@ -513,3 +531,4 @@ class ToolManager:
             'credentials': masked_credentials,
             'privacy_policy': provider.privacy_policy
         }))
+    
