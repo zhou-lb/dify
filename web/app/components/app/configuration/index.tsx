@@ -43,7 +43,7 @@ import { fetchDatasets } from '@/service/datasets'
 import { useProviderContext } from '@/context/provider-context'
 import { AgentStrategy, AppType, ModelModeType, RETRIEVE_TYPE, Resolution, TransferMethod } from '@/types/app'
 import { PromptMode } from '@/models/debug'
-import { ANNOTATION_DEFAULT, DEFAULT_AGENT_SETTING, DEFAULT_CHAT_PROMPT_CONFIG, DEFAULT_COMPLETION_PROMPT_CONFIG } from '@/config'
+import { ANNOTATION_DEFAULT, DEFAULT_AGENT_SETTING, DEFAULT_CHAT_PROMPT_CONFIG, DEFAULT_COMPLETION_PROMPT_CONFIG, supportFunctionCallModels } from '@/config'
 import SelectDataSet from '@/app/components/app/configuration/dataset-config/select-dataset'
 import I18n from '@/context/i18n'
 import { useModalContext } from '@/context/modal-context'
@@ -163,8 +163,7 @@ const Configuration: FC = () => {
     doSetModelConfig(newModelConfig)
   }
   const isOpenAI = modelConfig.provider === 'openai'
-  const isFunctionCall = isOpenAI && modelConfig.mode === ModelModeType.chat
-
+  const isFunctionCall = (isOpenAI && modelConfig.mode === ModelModeType.chat) || supportFunctionCallModels.includes(modelConfig.model_id)
   const [collectionList, setCollectionList] = useState<Collection[]>([])
   useEffect(() => {
 
@@ -285,6 +284,23 @@ const Configuration: FC = () => {
 
     doSetPromptMode(mode)
   }
+  const [visionConfig, doSetVisionConfig] = useState({
+    enabled: false,
+    number_limits: 2,
+    detail: Resolution.low,
+    transfer_methods: [TransferMethod.local_file],
+  })
+
+  const handleSetVisionConfig = (config: VisionSettings, notNoticeFormattingChanged?: boolean) => {
+    doSetVisionConfig({
+      enabled: config.enabled || false,
+      number_limits: config.number_limits || 2,
+      detail: config.detail || Resolution.low,
+      transfer_methods: config.transfer_methods || [TransferMethod.local_file],
+    })
+    if (!notNoticeFormattingChanged)
+      setFormattingChanged(true)
+  }
 
   const {
     chatPromptConfig,
@@ -310,7 +326,6 @@ const Configuration: FC = () => {
     setCompletionParams,
     setStop: setTempStop,
   })
-
   const setModel = async ({
     modelId,
     provider,
@@ -343,9 +358,8 @@ const Configuration: FC = () => {
 
     setModelConfig(newModelConfig)
     const supportVision = features && features.includes(ModelFeatureEnum.vision)
-    // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    setVisionConfig({
-      // eslint-disable-next-line @typescript-eslint/no-use-before-define
+
+    handleSetVisionConfig({
       ...visionConfig,
       enabled: supportVision,
     }, true)
@@ -353,18 +367,6 @@ const Configuration: FC = () => {
   }
 
   const isShowVisionConfig = !!currModel?.features?.includes(ModelFeatureEnum.vision)
-  const [visionConfig, doSetVisionConfig] = useState({
-    enabled: false,
-    number_limits: 2,
-    detail: Resolution.low,
-    transfer_methods: [TransferMethod.local_file],
-  })
-
-  const setVisionConfig = (config: VisionSettings, notNoticeFormattingChanged?: boolean) => {
-    doSetVisionConfig(config)
-    if (!notNoticeFormattingChanged)
-      setFormattingChanged(true)
-  }
 
   useEffect(() => {
     (async () => {
@@ -485,7 +487,7 @@ const Configuration: FC = () => {
         }
 
         if (modelConfig.file_upload)
-          setVisionConfig(modelConfig.file_upload.image, true)
+          handleSetVisionConfig(modelConfig.file_upload.image, true)
 
         syncToPublishedConfig(config)
         setPublishedConfig(config)
@@ -728,7 +730,7 @@ const Configuration: FC = () => {
       hasSetContextVar,
       isShowVisionConfig,
       visionConfig,
-      setVisionConfig,
+      setVisionConfig: handleSetVisionConfig,
     }}
     >
       <>
