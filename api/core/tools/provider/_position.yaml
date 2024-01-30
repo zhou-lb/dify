@@ -1,13 +1,16 @@
 - google
 - wikipedia
 - dalle
+- azuredalle
 - webscraper
 - wolframalpha
 - model_provider.openai
 - model_provider.google
+- github
 - chart
 - time
 - yahoo
 - stablediffusion
 - vectorizer
 - youtube
+- gaode
