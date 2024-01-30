@@ -10,8 +10,8 @@ providers:
           zh_Hans: Gemini Pro 图像理解
   - provider: zhipuai
     alias:
-      en_US: ZhipuaiModel
-      zh_Hans: 智谱AI模型能力
+      en_US: ZhipuaiVision
+      zh_Hans: 智谱AI 图像理解
     models:
       - name: glm-4v
         alias:
@@ -19,8 +19,8 @@ providers:
           zh_Hans: GLM-4V 图像理解
   - provider: openai
     alias:
-      en_US: OpenAIModel
-      zh_Hans: OpenAI模型能力
+      en_US: OpenAIVision
+      zh_Hans: OpenAI 图像理解
     models:
       - name: gpt-4-vision-preview
         alias:

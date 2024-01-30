@@ -2,9 +2,9 @@ identity:
   author: Leslie
   name: azuredalle
   label:
-    en_US: AZURE DALL-E
-    zh_Hans: AZURE DALL-E 绘画
-    pt_BR: AZURE DALL-E
+    en_US: AzureDALL-E
+    zh_Hans: AzureDALL-E 绘画
+    pt_BR: AzureDALL-E
   description:
     en_US: AZURE DALL-E art
     zh_Hans: AZURE DALL-E 绘画
