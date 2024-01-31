@@ -166,6 +166,7 @@ const Chat: FC<ChatProps> = ({
           {
             !noChatInput && (
               <ChatInput
+                isAgent={config?.agent_mode.enabled}
                 visionConfig={config?.file_upload?.image}
                 speechToTextConfig={config?.speech_to_text}
                 onSend={onSend}

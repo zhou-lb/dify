@@ -32,11 +32,13 @@ import {
 type ChatInputProps = {
   visionConfig?: VisionConfig
   speechToTextConfig?: EnableType
+  isAgent?: boolean
   onSend?: OnSend
 }
 const ChatInput: FC<ChatInputProps> = ({
   visionConfig,
   speechToTextConfig,
+  isAgent,
   onSend,
 }) => {
   const { t } = useTranslation()
@@ -128,13 +130,14 @@ const ChatInput: FC<ChatInputProps> = ({
       `}
     >
       {
-        visionConfig?.enabled && (
+        (isAgent || visionConfig?.enabled) && (
           <>
             <div className='absolute bottom-2 left-2 flex items-center'>
               <ChatImageUploader
+                isAgent={isAgent}
                 settings={visionConfig}
                 onUpload={onUpload}
-                disabled={files.length >= visionConfig.number_limits}
+                disabled={visionConfig && files.length >= visionConfig?.number_limits}
               />
               <div className='mx-1 w-[1px] h-4 bg-black/5' />
             </div>

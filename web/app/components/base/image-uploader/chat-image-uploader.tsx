@@ -116,35 +116,48 @@ const UploaderButton: FC<UploaderButtonProps> = ({
 }
 
 type ChatImageUploaderProps = {
-  settings: VisionSettings
+  settings?: VisionSettings
   onUpload: (imageFile: ImageFile) => void
   disabled?: boolean
+  isAgent?: boolean
 }
 const ChatImageUploader: FC<ChatImageUploaderProps> = ({
   settings,
   onUpload,
   disabled,
+  isAgent,
 }) => {
-  const onlyUploadLocal = settings.transfer_methods.length === 1 && settings.transfer_methods[0] === TransferMethod.local_file
-
-  if (onlyUploadLocal) {
+  if (settings) {
+    const onlyUploadLocal = settings.transfer_methods.length === 1 && settings.transfer_methods[0] === TransferMethod.local_file
+    if (onlyUploadLocal) {
+      return (
+        <UploadOnlyFromLocal
+          onUpload={onUpload}
+          disabled={disabled}
+          limit={+settings.image_file_size_limit!}
+        />
+      )
+    }
     return (
-      <UploadOnlyFromLocal
+      <UploaderButton
+        methods={settings.transfer_methods}
         onUpload={onUpload}
         disabled={disabled}
         limit={+settings.image_file_size_limit!}
       />
     )
   }
-
-  return (
-    <UploaderButton
-      methods={settings.transfer_methods}
-      onUpload={onUpload}
-      disabled={disabled}
-      limit={+settings.image_file_size_limit!}
-    />
-  )
+  else if (isAgent) {
+    return (
+      <UploadOnlyFromLocal
+        onUpload={onUpload}
+        disabled={disabled}
+      />
+    )
+  }
+  else {
+    return <div>123123</div>
+  }
 }
 
 export default ChatImageUploader

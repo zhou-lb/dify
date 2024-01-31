@@ -21,6 +21,7 @@ const DebugWithMultipleModel = () => {
     mode,
     speechToTextConfig,
     visionConfig,
+    isAgent,
   } = useDebugConfigurationContext()
   const {
     multipleModelConfigs,
@@ -127,6 +128,7 @@ const DebugWithMultipleModel = () => {
               onSend={handleSend}
               speechToTextConfig={speechToTextConfig}
               visionConfig={visionConfig}
+              isAgent={isAgent}
             />
           </div>
         )
