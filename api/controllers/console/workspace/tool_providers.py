@@ -81,14 +81,14 @@ class ToolBuiltinProviderUpdateApi(Resource):
 class ToolBuiltinProviderIconApi(Resource):
     @setup_required
     def get(self, provider):
-        icon_bytes, minetype = ToolManageService.get_builtin_tool_provider_icon(provider)
-        return send_file(io.BytesIO(icon_bytes), mimetype=minetype)
+        icon_bytes, mimetype = ToolManageService.get_builtin_tool_provider_icon(provider)
+        return send_file(io.BytesIO(icon_bytes), mimetype=mimetype)
 
 class ToolModelProviderIconApi(Resource):
     @setup_required
     def get(self, provider):
-        icon_bytes, minetype = ToolManageService.get_model_tool_provider_icon(provider)
-        return send_file(io.BytesIO(icon_bytes), mimetype=minetype)
+        icon_bytes, mimetype = ToolManageService.get_model_tool_provider_icon(provider)
+        return send_file(io.BytesIO(icon_bytes), mimetype=mimetype)
     
 class ToolModelProviderListToolsApi(Resource):
     @setup_required

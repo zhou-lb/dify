@@ -464,7 +464,7 @@ class ToolManageService:
         provider: str
     ):
         """
-            get tool provider icon and it's minetype
+            get tool provider icon and it's mimetype
         """
         icon_path, mime_type = ToolManager.get_builtin_provider_icon(provider)
         with open(icon_path, 'rb') as f:
@@ -477,7 +477,7 @@ class ToolManageService:
         provider: str
     ):
         """
-            get tool provider icon and it's minetype
+            get tool provider icon and it's mimetype
         """
         
         service = ModelProviderService()
