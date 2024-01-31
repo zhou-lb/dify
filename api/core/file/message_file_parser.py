@@ -54,7 +54,10 @@ class MessageFileParser:
                 image_config = file_upload_config.get('image')
 
                 # check if image file feature is enabled or it's agent
-                if not image_config['enabled'] and not (app_model_config.agent_mode_dict.get('enabled', '') in ['react', 'function_call', 'cot']):
+                if not image_config['enabled'] and not (
+                    app_model_config.agent_mode_dict.get('enabled', False) and 
+                    app_model_config.agent_mode_dict.get('strategy', '') in ['react', 'function_call', 'cot']
+                ):
                     continue
 
                 # Validate number of files

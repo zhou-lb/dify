@@ -1,6 +1,5 @@
 from typing import Any, Dict, List, cast
 from enum import Enum
-from pydantic import validator
 from base64 import b64encode
 
 from core.tools.entities.tool_entities import ToolInvokeMessage
@@ -60,7 +59,8 @@ class ModelTool(Tool):
             identity=self.identity.copy() if self.identity else None,
             parameters=self.parameters.copy() if self.parameters else None,
             description=self.description.copy() if self.description else None,
-            model_configuration=self.model_configuration.copy() if self.model_configuration else None,
+            model_instance=self.model_configuration['model_instance'],
+            model=self.model_configuration['model'],
             tool_type=self.tool_type,
             runtime=Tool.Runtime(**meta)
         )
@@ -80,6 +80,8 @@ class ModelTool(Tool):
         
         if self.tool_type == ModelTool.ModelToolType.VISION:
             return self._invoke_llm(user_id, tool_parameters)
+        else:
+            return self.create_text_message('the tool is not configured correctly')
         
     def _invoke_llm(self, user_id: str, tool_parameters: Dict[str, Any]) -> ToolInvokeMessage | List[ToolInvokeMessage]:
         # get image
