@@ -211,7 +211,7 @@ class ToolManager:
 
             return model_tool.fork_tool_runtime(meta={
                 'tenant_id': tenant_id,
-                'credentials': model_tool._model_instance.credentials
+                'credentials': model_tool.model_configuration['model_instance'].credentials
             })
         elif provider_type == 'app':
             raise NotImplementedError('app provider not implemented')

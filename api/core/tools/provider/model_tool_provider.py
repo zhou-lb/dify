@@ -171,8 +171,8 @@ class ModelToolProviderController(ToolProviderController):
                     ),
                     is_team_authorization=model.status == ModelStatus.ACTIVE,
                     tool_type=ModelTool.ModelToolType.VISION,
-                    _model_instance=model_instance,
-                    _model=model.model,
+                    model_instance=model_instance,
+                    model=model.model,
                 ))
 
         self.tools = tools
@@ -202,7 +202,7 @@ class ModelToolProviderController(ToolProviderController):
             :return: the tool
         """
         if self.tools is None:
-            self.get_tools()
+            self.get_tools(user_id='', tenant_id=self.configuration.tenant_id)
 
         for tool in self.tools:
             if tool.identity.name == tool_name:
