@@ -4,7 +4,7 @@ from os import path
 from yaml import load, FullLoader
 
 from core.tools.entities.tool_entities import ToolProviderType, \
-      ToolParamter, ToolProviderCredentials, ToolDescription, ToolProviderIdentity
+      ToolParameter, ToolProviderCredentials, ToolDescription, ToolProviderIdentity
 from core.tools.provider.tool_provider import ToolProviderController
 from core.tools.errors import ToolNotFoundError
 from core.tools.tool.model_tool import ModelTool
@@ -16,7 +16,7 @@ from core.entities.model_entities import ModelStatus
 from core.provider_manager import ProviderManager, ProviderConfiguration, ProviderModelBundle
 from core.model_manager import ModelInstance
 
-class ModelToolProviderConifguration(BaseModel):
+class ModelToolProviderConfiguration(BaseModel):
     """
         the configuration of the model tool provider
     """
@@ -31,9 +31,9 @@ class ModelToolProviderConifguration(BaseModel):
 
     providers: List[Provider] = None
 
-_model_tool_provider_config: ModelToolProviderConifguration = None
+_model_tool_provider_config: ModelToolProviderConfiguration = None
 with open(path.join(path.dirname(__file__), '_model_providers.yaml'), 'r') as f:
-    _model_tool_provider_config = ModelToolProviderConifguration(**load(f, Loader=FullLoader))
+    _model_tool_provider_config = ModelToolProviderConfiguration(**load(f, Loader=FullLoader))
 
 class ModelToolProviderController(ToolProviderController):
     configuration: ProviderConfiguration = None
@@ -151,12 +151,12 @@ class ModelToolProviderController(ToolProviderController):
                         label=I18nObject(zh_Hans=model.label.zh_Hans, en_US=model.label.en_US),
                     ),
                     parameters=[
-                        ToolParamter(
+                        ToolParameter(
                             name='image_id',
                             label=I18nObject(zh_Hans='图片ID', en_US='Image ID'),
                             human_description=I18nObject(zh_Hans='图片ID', en_US='Image ID'),
-                            type=ToolParamter.ToolParameterType.STRING,
-                            form=ToolParamter.ToolParameterForm.LLM,
+                            type=ToolParameter.ToolParameterType.STRING,
+                            form=ToolParameter.ToolParameterForm.LLM,
                             required=True,
                             default=Tool.VARIABLE_KEY.IMAGE.value
                         )
@@ -206,7 +206,7 @@ class ModelToolProviderController(ToolProviderController):
 
         raise ValueError(f'tool {tool_name} not found')
 
-    def get_parameters(self, tool_name: str) -> List[ToolParamter]:
+    def get_parameters(self, tool_name: str) -> List[ToolParameter]:
         """
             returns the parameters of the tool
 
