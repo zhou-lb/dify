@@ -8,6 +8,7 @@ import type { Collection, CustomCollectionBackend, Tool } from '../types'
 import Loading from '../../base/loading'
 import { ArrowNarrowRight } from '../../base/icons/src/vender/line/arrows'
 import Toast from '../../base/toast'
+import { ConfigurateMethodEnum } from '../../header/account-setting/model-provider-page/declarations'
 import Header from './header'
 import Item from './item'
 import AppIcon from '@/app/components/base/app-icon'
@@ -16,6 +17,8 @@ import { fetchCustomCollection, removeBuiltInToolCredential, removeCustomCollect
 import EditCustomToolModal from '@/app/components/tools/edit-custom-collection-modal'
 import type { AgentTool } from '@/types/app'
 import { MAX_TOOLS_NUM } from '@/config'
+import { useModalContext } from '@/context/modal-context'
+import { useProviderContext } from '@/context/provider-context'
 
 type Props = {
   collection: Collection | null
@@ -45,7 +48,30 @@ const ToolList: FC<Props> = ({
   const isModel = collection?.type === CollectionType.model
   const needAuth = collection?.allow_delete || collection?.type === CollectionType.model
 
+  const { setShowModelModal } = useModalContext()
   const [showSettingAuth, setShowSettingAuth] = useState(false)
+  const { modelProviders: providers } = useProviderContext()
+
+  const showSettingAuthModal = () => {
+    if (isModel) {
+      const provider = providers.find(item => item.provider === collection?.id)
+      if (provider) {
+        setShowModelModal({
+          payload: {
+            currentProvider: provider,
+            currentConfigurateMethod: ConfigurateMethodEnum.predefinedModel,
+            currentCustomConfigrationModelFixedFields: undefined,
+          },
+          onSaveCallback: () => {
+            onRefreshData()
+          },
+        })
+      }
+    }
+    else {
+      setShowSettingAuth(true)
+    }
+  }
 
   const [customCollection, setCustomCollection] = useState<CustomCollectionBackend | null>(null)
   useEffect(() => {
@@ -114,7 +140,7 @@ const ToolList: FC<Props> = ({
         icon={icon}
         collection={collection}
         loc={loc}
-        onShowAuth={() => setShowSettingAuth(true)}
+        onShowAuth={() => showSettingAuthModal()}
         onShowEditCustomCollection={() => setIsShowEditCustomCollectionModal(true)}
       />
       <div className={cn(isInToolsPage ? 'px-6 pt-4' : 'px-4 pt-3')}>
@@ -127,7 +153,7 @@ const ToolList: FC<Props> = ({
               <div>·</div>
               <div
                 className='flex items-center text-[#155EEF] cursor-pointer'
-                onClick={() => setShowSettingAuth(true)}
+                onClick={() => showSettingAuthModal()}
               >
                 <div>{t('tools.auth.setup')}</div>
                 <ArrowNarrowRight className='ml-0.5 w-3 h-3' />

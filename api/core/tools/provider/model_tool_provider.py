@@ -15,6 +15,7 @@ from core.model_runtime.entities.model_entities import ModelType, ModelFeature
 from core.entities.model_entities import ModelStatus
 from core.provider_manager import ProviderManager, ProviderConfiguration, ProviderModelBundle
 from core.model_manager import ModelInstance
+from core.errors.error import ProviderTokenNotInitError
 
 class ModelToolProviderConfiguration(BaseModel):
     """
@@ -142,7 +143,10 @@ class ModelToolProviderController(ToolProviderController):
                     model_type_instance=model_type_instance
                 )
 
-                model_instance = ModelInstance(provider_model_bundle, model.model)
+                try:
+                    model_instance = ModelInstance(provider_model_bundle, model.model)
+                except ProviderTokenNotInitError:
+                    model_instance = None
                 
                 tools.append(ModelTool(
                     identity=ToolIdentity(

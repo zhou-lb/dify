@@ -55,7 +55,7 @@ const Header: FC<Props> = ({
         <div
           className={cn('cursor-pointer', 'ml-1 shrink-0 flex items-center h-8 border border-gray-200 rounded-lg px-3 space-x-2 shadow-xs')}
           onClick={() => {
-            if (collection.type === CollectionType.builtIn)
+            if (collection.type === CollectionType.builtIn || collection.type === CollectionType.model)
               onShowAuth()
           }}
         >
