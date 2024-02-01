@@ -37,16 +37,20 @@ class TokenBufferMemory:
         prompt_messages = []
         for message in messages:
             files = message.message_files
+            config = message.app_model_config
             if files:
-                file_objs = message_file_parser.transform_message_files(
-                    files, message.app_model_config
-                )
+                if config.agent_mode_dict.get('enabled', False) and config.agent_mode_dict.get('strategy') in ['function_call', 'react', 'cot']:
+                    prompt_messages.append(UserPromptMessage(content=message.query))
+                else:
+                    file_objs = message_file_parser.transform_message_files(
+                        files, message.app_model_config
+                    )
 
-                prompt_message_contents = [TextPromptMessageContent(data=message.query)]
-                for file_obj in file_objs:
-                    prompt_message_contents.append(file_obj.prompt_message_content)
+                    prompt_message_contents = [TextPromptMessageContent(data=message.query)]
+                    for file_obj in file_objs:
+                        prompt_message_contents.append(file_obj.prompt_message_content)
 
-                prompt_messages.append(UserPromptMessage(content=prompt_message_contents))
+                    prompt_messages.append(UserPromptMessage(content=prompt_message_contents))
             else:
                 prompt_messages.append(UserPromptMessage(content=message.query))
 

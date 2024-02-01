@@ -3,7 +3,7 @@ from typing import Generator, List, Optional, Tuple, Union, cast
 
 from core.application_queue_manager import ApplicationQueueManager, PublishFrom
 from core.entities.application_entities import AppOrchestrationConfigEntity, ModelConfigEntity, \
-    PromptTemplateEntity, ExternalDataVariableEntity, ApplicationGenerateEntity, InvokeFrom
+    PromptTemplateEntity, ExternalDataVariableEntity, ApplicationGenerateEntity, InvokeFrom, AgentEntity
 from core.file.file_obj import FileObj
 from core.memory.token_buffer_memory import TokenBufferMemory
 from core.model_runtime.entities.llm_entities import LLMResult, LLMResultChunk, LLMResultChunkDelta, LLMUsage
@@ -57,6 +57,7 @@ class AppRunner:
         prompt_messages, stop = self.organize_prompt_messages(
             app_record=app_record,
             model_config=model_config,
+            agent_config=None,
             prompt_template_entity=prompt_template_entity,
             inputs=inputs,
             files=files,
@@ -116,6 +117,7 @@ class AppRunner:
                                  prompt_template_entity: PromptTemplateEntity,
                                  inputs: dict[str, str],
                                  files: list[FileObj],
+                                 agent_config: Optional[AgentEntity] = None,
                                  query: Optional[str] = None,
                                  context: Optional[str] = None,
                                  memory: Optional[TokenBufferMemory] = None) \
@@ -144,7 +146,8 @@ class AppRunner:
                 files=files,
                 context=context,
                 memory=memory,
-                model_config=model_config
+                model_config=model_config,
+                agent_config=agent_config
             )
         else:
             prompt_messages = prompt_transform.get_advanced_prompt(

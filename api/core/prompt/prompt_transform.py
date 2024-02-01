@@ -5,7 +5,7 @@ import re
 from typing import List, Optional, Tuple, cast
 
 from core.entities.application_entities import (AdvancedCompletionPromptTemplateEntity, ModelConfigEntity,
-                                                PromptTemplateEntity)
+                                                PromptTemplateEntity, AgentEntity)
 from core.file.file_obj import FileObj
 from core.memory.token_buffer_memory import TokenBufferMemory
 from core.model_runtime.entities.message_entities import (AssistantPromptMessage, PromptMessage, PromptMessageRole,
@@ -62,7 +62,8 @@ class PromptTransform:
                    files: List[FileObj],
                    context: Optional[str],
                    memory: Optional[TokenBufferMemory],
-                   model_config: ModelConfigEntity) -> \
+                   model_config: ModelConfigEntity,
+                   agent_config: AgentEntity) -> \
             Tuple[List[PromptMessage], Optional[List[str]]]:
         app_mode = AppMode.value_of(app_mode)
         model_mode = ModelMode.value_of(model_config.mode)
@@ -84,7 +85,8 @@ class PromptTransform:
                 files=files,
                 context=context,
                 memory=memory,
-                model_config=model_config
+                model_config=model_config,
+                agent_config=agent_config
             )
         else:
             stops = prompt_rules.get('stops')
@@ -219,7 +221,8 @@ class PromptTransform:
                                                         context: Optional[str],
                                                         files: List[FileObj],
                                                         memory: Optional[TokenBufferMemory],
-                                                        model_config: ModelConfigEntity) -> List[PromptMessage]:
+                                                        model_config: ModelConfigEntity,
+                                                        agent_config: Optional[AgentEntity] = None) -> List[PromptMessage]:
         prompt_messages = []
 
         context_prompt_content = ''
@@ -256,11 +259,13 @@ class PromptTransform:
         )
 
         if files:
-            prompt_message_contents = [TextPromptMessageContent(data=query)]
-            for file in files:
-                prompt_message_contents.append(file.prompt_message_content)
-
-            prompt_messages.append(UserPromptMessage(content=prompt_message_contents))
+            if agent_config and agent_config.strategy in AgentEntity.Strategy:
+                prompt_messages.append(UserPromptMessage(content=query))
+            else:
+                prompt_message_contents = [TextPromptMessageContent(data=query)]
+                for file in files:
+                    prompt_message_contents.append(file.prompt_message_content)
+                prompt_messages.append(UserPromptMessage(content=prompt_message_contents))
         else:
             prompt_messages.append(UserPromptMessage(content=query))
 

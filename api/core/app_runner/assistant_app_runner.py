@@ -80,6 +80,7 @@ class AssistantApplicationRunner(AppRunner):
         prompt_messages, _ = self.organize_prompt_messages(
             app_record=app_record,
             model_config=app_orchestration_config.model_config,
+            agent_config=app_orchestration_config.agent,
             prompt_template_entity=app_orchestration_config.prompt_template,
             inputs=inputs,
             files=files,
@@ -148,6 +149,7 @@ class AssistantApplicationRunner(AppRunner):
         prompt_messages, _ = self.organize_prompt_messages(
             app_record=app_record,
             model_config=app_orchestration_config.model_config,
+            agent_config=app_orchestration_config.agent,
             prompt_template_entity=app_orchestration_config.prompt_template,
             inputs=inputs,
             files=files,
@@ -188,6 +190,7 @@ class AssistantApplicationRunner(AppRunner):
         prompt_message, _ = self.organize_prompt_messages(
             app_record=app_record,
             model_config=app_orchestration_config.model_config,
+            agent_config=app_orchestration_config.agent,
             prompt_template_entity=app_orchestration_config.prompt_template,
             inputs=inputs,
             files=files,
