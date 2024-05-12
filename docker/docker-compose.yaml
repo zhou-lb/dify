@@ -230,6 +230,37 @@ services:
     # ports:
     #   - "6379:6379"
 
+  # The DifySandbox
+  sandbox:
+    image: langgenius/dify-sandbox:0.1.0
+    restart: always
+    cap_add:
+    # Why is sys_admin permission needed?
+    # https://docs.dify.ai/getting-started/install-self-hosted/install-faq#id-16.-why-is-sys_admin-permission-needed
+      - SYS_ADMIN
+    environment:
+      # The DifySandbox configurations
+      API_KEY: ${API_KEY:-dify-sandbox}
+      GIN_MODE: ${GIN_MODE:-release}
+      WORKER_TIMEOUT: ${WORKER_TIMEOUT:-15}
+
+  # The nginx reverse proxy.
+  # used for reverse proxying the API service and Web service.
+  nginx:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template
+      - ./nginx/proxy.conf.template:/etc/nginx/proxy.conf.template
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh
+    entrypoint: /docker-entrypoint.sh
+    depends_on:
+      - api
+      - web
+    ports:
+      - "80:80"
+
   # The Weaviate vector store.
   weaviate:
     image: semitechnologies/weaviate:1.19.0
@@ -256,36 +287,6 @@ services:
     # ports:
     #  - "8080:8080"
 
-  # The DifySandbox
-  sandbox:
-    image: langgenius/dify-sandbox:0.1.0
-    restart: always
-    cap_add:
-    # Why is sys_admin permission needed?
-    # https://docs.dify.ai/getting-started/install-self-hosted/install-faq#id-16.-why-is-sys_admin-permission-needed
-      - SYS_ADMIN
-    environment:
-      # The DifySandbox configurations
-      API_KEY: ${API_KEY:-dify-sandbox}
-      GIN_MODE: ${GIN_MODE:-release}
-      WORKER_TIMEOUT: ${WORKER_TIMEOUT:-15}
-
-  # The nginx reverse proxy.
-  # used for reverse proxying the API service and Web service.
-  nginx:
-    image: nginx:latest
-    restart: always
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./nginx/proxy.conf:/etc/nginx/proxy.conf
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      # - ./nginx/ssl:/etc/ssl
-    depends_on:
-      - api
-      - web
-    ports:
-      - "80:80"
-      # - "443:443"
 
   # Qdrant vector store.
   # (if used, you need to set VECTOR_STORE to qdrant in the api & worker service.)
@@ -303,7 +304,6 @@ services:
     #  - "6333:6333"
     #  - "6334:6334"
 
-  
   # pgvector-rs vector store
   pgvector-rs:
     image: tensorchord/pgvecto-rs:pg16-v0.2.0
